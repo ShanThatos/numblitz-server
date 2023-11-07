@@ -1,0 +1,17 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Admin Home{% endblock %}
+
+{% block menu %}{% endblock %}
+
+{% block content %}
+<div class="w-[100vw] min-h-[100vh] flex flex-col justify-center items-center">
+    <div>
+        {% for href, name in [("/admin/createmodel", "Create a Model"), ("/admin/listmodels", "All Models"), ("/admin/logout", "Logout")] %}
+        <div class="text-center mb-3">
+            <a class="text-blue-600 hover:underline" href="{{ href }}">{{ name }}</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

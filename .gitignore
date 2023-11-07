@@ -1,0 +1,7 @@
+/_temp/
+/.vscode/
+__pycache__/
+/.env.dev
+/.env.prod
+/alembic/
+/.venv/

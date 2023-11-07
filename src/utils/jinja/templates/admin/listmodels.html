@@ -1,0 +1,18 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Admin All Models{% endblock %}
+
+{% block content %}
+<div class="w-[100vw] min-h-[100vh] flex flex-col justify-center items-center">
+    <div class="m-5 p-5 shadow-lg bg-white rounded-lg flex flex-row gap-5">
+        <div class="flex flex-row flex-wrap">
+            {% for model in models %}
+                <a href="/admin/editmodel/{{ model.id }}" class="border-4 shadow border-neutral-300 rounded-lg p-3 hover:opacity-70 cursor-pointer">
+                    <div class="text-lg font-bold mb-1">{{ model.name }} {{ model.difficulty * "*" }}</div>
+                    <span class="px-2 py-1 bg-neutral-200 rounded">{{ model.category.name }}</span>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

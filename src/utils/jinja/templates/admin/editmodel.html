@@ -1,0 +1,195 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Admin Edit Model{% endblock %}
+
+{% set inputclasses = "bg-neutral-100 border border-neutral-300 p-1 rounded grow" %}
+{% set labeledinputclasses = "flex flex-row justify-start items-center gap-3 mb-2" %}
+
+{% block content %}
+<div class="w-[100vw] min-h-[100vh] flex flex-col justify-center items-center">
+    <div class="m-5 p-5 shadow-lg bg-white rounded-lg flex flex-row gap-5">
+        <form>
+            <div>
+                <div class="{{ labeledinputclasses }}">
+                    <label>ID:</label>
+                    <input name="id" class="{{ inputclasses }}" type="text" placeholder="Model ID" value="{{ model.id }}" />
+                </div>
+                <div class="{{ labeledinputclasses }}">
+                    <label>Category:</label>
+                    <select name="category_id" class="{{ inputclasses }}">
+                        {% for category in [""] + categories %}
+                            <option value="{{ category.id }}" {{ "selected" if model.category_id == category.id else "" }}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="{{ labeledinputclasses }}">
+                    <label>Name:</label>
+                    <input name="name" class="{{ inputclasses }}" type="text" placeholder="Display Name" value="{{ model.name }}" />
+                </div>
+                <div class="{{ labeledinputclasses }}">
+                    <label>Display:</label>
+                    <input id="model-display-input" class="{{ inputclasses }}" type="text" placeholder="Display Math" />
+                    <textarea id="model-display-data" name="display" class="{{ inputclasses }}" hidden>{{ model.display or "[\"\", \"\"]" }}</textarea>
+                    <script>
+                        const displayInput = document.getElementById("model-display-input")
+                        const displayData = document.getElementById("model-display-data")
+
+                        displayInput.value = JSON.parse(displayData.value)[0]
+
+                        var lastRendered = null
+                        setInterval(() => {
+                            const preview = document.getElementById("display-preview")
+                            const value = displayInput.value || " "
+                            if (value == lastRendered) return
+                            preview.innerHTML = `$${value}$`
+                            renderMathInElement(preview, katexRenderOptions)
+                            domtoimage.toPng(preview).then(dataUrl => {
+                                displayData.value = JSON.stringify([value, dataUrl])
+                            })
+                            lastRendered = value
+                        }, 100)
+                    </script>
+                </div>
+                <div class="{{ labeledinputclasses }}">
+                    <label>Difficulty:</label>
+                    <select name="difficulty" class="{{ inputclasses }}">
+                        {% for d in range(1, 4) %}
+                            <option value="{{ d }}" {{ "selected" if model.difficulty == d else "" }}>{{ d }} {{ "*" * d }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="{{ labeledinputclasses }}">
+                    <label>Unlocked:</label>
+                    <input name="unlocked" class="scale-150" type="checkbox" {{ "checked" if model.unlocked else "" }}/>
+                </div>
+                <div class="{{ labeledinputclasses }}">
+                    <label>Answer Format:</label>
+                    <select name="answer_format" class="{{ inputclasses }}">
+                        {% for format in ["auto", "number", "decimal", "money", "fraction", "mixed"] %}
+                            <option value="{{ format }}" {{ "selected" if model.answer_format == format else "" }}>{{ format }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="{{ labeledinputclasses }}">
+                    <label>Right-to-left:</label>
+                    <input name="rtl" class="scale-150" type="checkbox" {{ "checked" if model.rtl else "" }}/>
+                </div>
+                <div class="{{ labeledinputclasses }}">
+                    <label>Units:</label>
+                    <input name="units" class="{{ inputclasses }}" type="text" placeholder="Units" value="{{ model.units }}" />
+                </div>
+            </div>
+            <div class="mb-2">
+                <label>MathGen Code</label>
+                <div id="model-code-editor" class="min-h-[300px] rounded-lg border-4 border-neutral-200 text-base">{{ model.code }}</div>
+                <textarea 
+                    name="code"
+                    id="model-code-textarea" 
+                    class="hidden"
+                >{{ model.code }}</textarea>
+                <script>
+                    var codeeditor = ace.edit("model-code-editor", {
+                        wrap: true
+                    });
+                    codeeditor.getSession().on("change", () => {
+                        document.getElementById("model-code-textarea").innerHTML = codeeditor.getSession().getValue();
+                    });
+                </script>
+            </div>
+            <div class="flex flex-row justify-center items-center mb-2">
+                <button 
+                    class="px-10 py-1 bg-blue-300 rounded hover:opacity-60"
+                    hx-post="/admin/mathgen/generate"
+                    hx-swap="innerHTML"
+                    hx-target="#preview"
+                    hx-trigger="click,load"
+                >Preview</button>
+            </div>
+            
+            <style>
+                .katex {
+                    font-size: 1em;
+                }
+                .ql-container {
+                    font-size: 1.1em;
+                    font-family: KaTeX_Main, "Times New Roman", serif;
+                }
+
+                #preview {
+                    font-size: 1.3em;
+                    font-family: KaTeX_Main, "Times New Roman", serif;
+                }
+
+                #display-preview {
+                    font-size: 2em;
+                    font-family: KaTeX_Main, "Times New Roman", serif;
+                }
+
+            </style>
+            <div class="mb-2">
+                <label>Explanation</label>
+
+                <div id="model-explanation-editor" class="min-h-[300px]"></div>
+                <textarea 
+                    name="explanation"
+                    id="model-explanation-textarea" 
+                    class="hidden"
+                >{{ model.explanation or "[]" }}</textarea>
+            </div>
+            <div class="flex flex-row justify-center items-center gap-3 mb-2">
+                <button 
+                    class="px-10 py-1 bg-green-400 rounded hover:opacity-60" 
+                    hx-post="/admin/savemodel/{{ model.id or "__dummy__" }}"
+                    hx-swap="none"
+                >Save</button>
+            </div>
+            <div class="text-center">
+                <h6 class="text-red-500" id="error-message"></h6>
+            </div>
+        </form>
+        <div class="min-w-[500px] flex flex-col gap-2 pb-6">
+            <div class="rounded bg-neutral-100 border-2 border-neutral-200 flex-1 p-4 flex flex-col gap-3 text-lg">
+                <div class="flex flex-row">
+                    <div id="display-preview"></div>
+                </div>
+                <div id="preview"></div>
+            </div>
+            <div id="explanation-preview"  class="rounded bg-neutral-100 border-2 border-neutral-200 flex-1 p-4"></div>
+        </div>
+    </div>
+    <script>
+        var explanation = document.getElementById("model-explanation-textarea");
+
+        const quill = new Quill("#model-explanation-editor", {
+            modules: {
+                toolbar: [
+                    [{ "size": ["small", false, "large", "huge"] }],
+                    ["bold", "italic", "underline", "strike"],
+                    [{ "color": [] }, { "background": [] }],
+                    [{ "list": "ordered" }, { "list": "bullet" }, { "indent": "-1" }, { "indent": "+1" }],
+                    [{ "align": [] }],
+                    ["link", "image", "video", "formula"],
+                ]
+            },
+            theme: "snow"
+        });
+
+        const quillPreview = new Quill("#explanation-preview", {
+            modules: {
+                toolbar: false
+            },
+            readOnly: true,
+            theme: "bubble"
+        });
+
+        quill.setContents(JSON.parse(explanation.innerHTML))
+
+        setInterval(() => {
+            const contents = quill.getContents();
+            explanation.innerHTML = JSON.stringify(contents);
+            quillPreview.setContents(contents);
+        }, 100)
+        quillPreview.setContents(JSON.parse(explanation.innerHTML))
+    </script>
+</div>
+{% endblock %}
