@@ -1,6 +1,7 @@
 from typing import Annotated, Optional
 
 from fastapi import Depends
+from mathgen import MathProblemGenerator
 
 from src.base.fastapi_instance import app
 from src.database.models import ProblemCategory, ProblemModel
@@ -31,7 +32,7 @@ def mathgen_models(
         expressions.append(ProblemModel.id.in_(model_ids.split(",")))
 
     models = ProblemModel.all(*expressions)
-    return [model.get_display_data(auser.subscribed) for model in models]
+    return [model.get_public_data(auser.subscribed) for model in models]
 
 
 @app.get("/mathgen/model/{model_id}/explanation")
@@ -42,3 +43,15 @@ def mathgen_model_explanation(auser: Annotated[AuthUser, Depends(any_user)], mod
         return ":("
 
     return render_template("mathviews/explanation.html", contents=model.explanation)
+
+
+@app.get("/mathgen/model/{model_id}/problems")
+def mathgen_model_problem(
+    auser: Annotated[AuthUser, Depends(any_user)], model_id: str, count: int = 1
+):
+    model = ProblemModel.get(model_id)
+
+    if not model.allow_access(auser.subscribed):
+        return ":("
+
+    return MathProblemGenerator.from_code(model.code).generate_multiple(count)

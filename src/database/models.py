@@ -104,29 +104,6 @@ class User(db.Model, ModelExtensions):
     __table_args__ = (UniqueConstraint("user_id", "provider", name="unique_user_constraint"),)
 
 
-class ModelProgress(db.Model, ModelExtensions):
-    __tablename__ = "model_progress"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int]
-    model_id: Mapped[int]
-    progress: Mapped[int]
-
-    __table_args__ = (
-        UniqueConstraint("user_id", "model_id", name="unique_model_progress_constraint"),
-    )
-
-
-class Workbook(db.Model, ModelExtensions):
-    __tablename__ = "workbooks"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    owner_id: Mapped[int]
-    name: Mapped[str]
-    description: Mapped[str] = mapped_column(server_default="")
-    data: Mapped[dict] = mapped_column(type_=JSON)
-
-
 class ProblemCategory(db.Model, ModelExtensions):
     __tablename__ = "problem_categories"
 
@@ -162,9 +139,19 @@ class ProblemModel(db.Model, ModelExtensions):
     def image_display(self):
         return json.loads(self.display)[1]
 
-    def get_display_data(self, subscribed=False):
+    def get_public_data(self, subscribed=False):
         data = self.as_dict(
-            include=["id", "category_id", "name", "image_display", "difficulty", "unlocked"]
+            include=[
+                "id",
+                "category_id",
+                "name",
+                "image_display",
+                "difficulty",
+                "unlocked",
+                "answer_format",
+                "rtl",
+                "units",
+            ]
         )
         if subscribed:
             data["locked"] = False
@@ -175,6 +162,27 @@ class ProblemModel(db.Model, ModelExtensions):
         return self.unlocked or subscribed
 
 
+class ModelProgress(db.Model, ModelExtensions):
+    __tablename__ = "model_progress"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey(User.id))
+    model_id: Mapped[str] = mapped_column(ForeignKey(ProblemModel.id))
+    progress: Mapped[int] = mapped_column(server_default="0")
+    average_time: Mapped[float] = mapped_column(server_default="0")
+
+    __table_args__ = (UniqueConstraint("user_id", "model_id"),)
+
+
+# class Workbook(db.Model, ModelExtensions):
+#     __tablename__ = "workbooks"
+
+#     id: Mapped[int] = mapped_column(primary_key=True)
+#     owner_id: Mapped[int] = mapped_column(ForeignKey(User.id))
+#     name: Mapped[str]
+#     description: Mapped[str] = mapped_column(server_default="")
+#     data: Mapped[dict] = mapped_column(type_=JSON)
+
 # future: WorkbookProgress
 
-__all__ = ("User", "ModelProgress", "Workbook", "ProblemCategory", "ProblemModel")
+__all__ = ("User", "ModelProgress", "ProblemCategory", "ProblemModel")
