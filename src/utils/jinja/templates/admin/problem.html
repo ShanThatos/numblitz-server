@@ -1,8 +1,8 @@
 
 
-{% macro math_problem(problem) %}
-    <div>
+{% macro math_problem(problem, units="") %}
+    <div class="mb-2">
         <div>{{ problem.question }}</div>
-        <div class="ml-2 mt-2">Answer: {{ problem.answer }}</div>
+        <div class="ml-2 mt-2">Answer: {{ problem.answer }}{{ units }}</div>
     </div>
 {% endmacro %}

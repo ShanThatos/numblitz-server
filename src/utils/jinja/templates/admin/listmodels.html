@@ -4,15 +4,52 @@
 
 {% block content %}
 <div class="w-[100vw] min-h-[100vh] flex flex-col justify-center items-center">
-    <div class="m-5 p-5 shadow-lg bg-white rounded-lg flex flex-row gap-5">
-        <div class="flex flex-row flex-wrap">
+    <div class="m-5 p-5 shadow-lg bg-white rounded-lg flex flex-row">
+        <div class="flex flex-row flex-wrap gap-5 justify-center max-w-2xl">
+            <div class="w-full p-5">
+                <div class="flex flex-row">
+                    <input id="modelnameinput" class="w-full px-2 py-1 bg-neutral-100 rounded border border-neutral-400" type="text" placeholder="Model Name" />
+                </div>
+            </div>
             {% for model in models %}
-                <a href="/admin/editmodel/{{ model.id }}" class="border-4 shadow border-neutral-300 rounded-lg p-3 hover:opacity-70 cursor-pointer">
-                    <div class="text-lg font-bold mb-1">{{ model.name }} {{ model.difficulty * "*" }}</div>
-                    <span class="px-2 py-1 bg-neutral-200 rounded">{{ model.category.name }}</span>
+                <a 
+                    href="/admin/editmodel/{{ model.id }}" 
+                    class="model relative border-4 shadow border-neutral-300 rounded-lg p-3 hover:opacity-70 cursor-pointer w-[300px]
+                        flex flex-col
+                    "
+                >
+                    <div class="pr-3 mb-2 grow">
+                        <span class="modelname text-lg font-bold mb-1 leading-none">{{ model.name }}</span>
+                    </div>
+                    <div>
+                        <span class="px-2 py-1 bg-blue-200 rounded">{{ model.category.name }}</span>
+                        <span class="px-2 py-1 {{ ['', 'bg-green-200', 'bg-yellow-200', 'bg-red-200'][model.difficulty] }} rounded">{{ model.difficulty * "*" }}</span>
+                        {% if model.hidden %}
+                            <span class="px-2 py-1 bg-neutral-200 rounded">Hidden</span>
+                        {% endif %}
+                        <span class="absolute top-1 right-2 text-red-500 font-bold">{{ model.difficulty * "*" }}</span>
+                    </div>
                 </a>
             {% endfor %}
         </div>
     </div>
 </div>
+<script>
+window.onload = () => {
+    const models = document.getElementsByClassName("model")
+    const modelnames = document.getElementsByClassName("modelname")
+    document.getElementById("modelnameinput").addEventListener("keyup", (e) => {
+        const value = e.target.value.toLowerCase()
+        for (let i = 0; i < models.length; i++) {
+            const model = models[i]
+            const modelname = modelnames[i].innerText.toLowerCase()
+
+            if (modelname.includes(value)) 
+                model.classList.remove("hidden")
+            else 
+                model.classList.add("hidden")
+        }
+    })
+}
+</script>
 {% endblock %}

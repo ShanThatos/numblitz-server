@@ -1,12 +1,12 @@
 from typing import Annotated, Optional
 
 from fastapi import Depends
-from mathgen import MathProblemGenerator
 
 from src.base.fastapi_instance import app
 from src.database.models import ProblemCategory, ProblemModel
 from src.utils.auth.depend import AuthUser, any_user
 from src.utils.jinja.jinja_utils import render_template
+from src.utils.mathgen import generate_multiple
 
 
 @app.get("/mathgen/categories")
@@ -25,7 +25,7 @@ def mathgen_models(
     category_id: Optional[str] = None,
     model_ids: Optional[str] = None,
 ):
-    expressions = []
+    expressions = [ProblemModel.hidden == False]
     if category_id is not None:
         expressions.append(ProblemModel.category_id == category_id)
     if model_ids is not None:
@@ -54,4 +54,4 @@ def mathgen_model_problem(
     if not model.allow_access(auser.subscribed):
         return ":("
 
-    return MathProblemGenerator.from_code(model.code).generate_multiple(count)
+    return generate_multiple(model_id=model_id, count=count)

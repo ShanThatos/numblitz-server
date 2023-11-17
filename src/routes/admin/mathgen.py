@@ -1,14 +1,15 @@
-import json
+import traceback
 from typing import Annotated
 
 from fastapi import Depends, Form, Response
 from fastapi.responses import HTMLResponse
-from mathgen import MathProblemGenerator
+from mathgen import MathProblemModel
 
 from src.base.fastapi_instance import app
 from src.database import ProblemCategory, ProblemModel, db
 from src.routes.admin.verify import verify_admin
 from src.utils.jinja.jinja_utils import render_macro, render_template
+from src.utils.mathgen import generate_multiple
 
 
 @app.get("/admin/listmodels", dependencies=[Depends(verify_admin)])
@@ -55,6 +56,7 @@ def model_form_data(
     answer_format: Annotated[str, Form()] = "auto",
     rtl: Annotated[str, Form()] = "off",
     units: Annotated[str, Form()] = "",
+    hidden: Annotated[str, Form()] = "off",
 ):
     return {
         "id": id,
@@ -68,6 +70,7 @@ def model_form_data(
         "answer_format": answer_format,
         "rtl": rtl == "on",
         "units": units,
+        "hidden": hidden == "on",
     }
 
 
@@ -96,6 +99,7 @@ async def admin_savemodel(original_id: str, form_data: Annotated[dict, Depends(m
     model.answer_format = form_data["answer_format"]
     model.rtl = form_data["rtl"]
     model.units = form_data["units"]
+    model.hidden = form_data["hidden"]
 
     if original_model is None:
         db.s.add(model)
@@ -106,9 +110,21 @@ async def admin_savemodel(original_id: str, form_data: Annotated[dict, Depends(m
 
 @app.post("/admin/mathgen/generate", dependencies=[Depends(verify_admin)])
 def admin_generate(form_data: Annotated[dict, Depends(model_form_data)]):
-    code = form_data["code"]
-    problems = MathProblemGenerator.from_code(code).generate_multiple(5)
+    try:
+        problems = generate_multiple(
+            model=MathProblemModel(
+                id="generated_from_code",
+                code=form_data["code"],
+                format=form_data["answer_format"],
+            ),
+            count=5,
+        )
 
-    return HTMLResponse(
-        "\n".join(render_macro("admin/problem.html:math_problem", p) for p in problems)
-    )
+        return HTMLResponse(
+            "\n".join(
+                render_macro("admin/problem.html:math_problem", p, units=form_data["units"])
+                for p in problems
+            )
+        )
+    except Exception as e:
+        return HTMLResponse(str(e))

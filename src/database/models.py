@@ -13,6 +13,7 @@ from typing import (
     override,
 )
 
+from mathgen import MathProblemModel
 from sqlalchemy import ColumnExpressionArgument, ForeignKey, select
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.schema import UniqueConstraint
@@ -128,6 +129,7 @@ class ProblemModel(db.Model, ModelExtensions):
     answer_format: Mapped[str] = mapped_column(server_default="auto")
     rtl: Mapped[bool] = mapped_column(server_default="false")
     units: Mapped[str] = mapped_column(server_default="")
+    hidden: Mapped[bool] = mapped_column(server_default="false")
 
     category: Mapped["ProblemCategory"] = relationship(back_populates="models")
 
@@ -160,6 +162,15 @@ class ProblemModel(db.Model, ModelExtensions):
 
     def allow_access(self, subscribed=False):
         return self.unlocked or subscribed
+
+    def get_mathgen_model(self) -> MathProblemModel:
+        return MathProblemModel(
+            id=self.id,
+            format=self.answer_format,  # type: ignore
+            code=self.code,
+            units=self.units,
+            rtl=self.rtl,
+        )
 
 
 class ModelProgress(db.Model, ModelExtensions):
