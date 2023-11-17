@@ -6,8 +6,8 @@
 {% set labeledinputclasses = "flex flex-row justify-start items-center gap-3 mb-2" %}
 
 {% block content %}
-<div class="w-[100vw] min-h-[100vh] flex flex-col justify-center items-center">
-    <div class="m-5 p-5 shadow-lg bg-white rounded-lg flex flex-row gap-5">
+<div class="w-[100vw] min-h-[100vh] flex flex-col justify-center items-center p-10">
+    <div class="m-5 p-5 shadow-lg bg-white rounded-lg flex flex-col lg:flex-row gap-5">
         <form>
             <div>
                 <div class="{{ labeledinputclasses }}">
@@ -133,15 +133,12 @@
             <div class="mb-2">
                 <label>Explanation</label>
 
-                <div id="model-explanation-editor" class="min-h-[300px]"></div>
-                <input name="explanation" id="model-explanation" class="hidden"
-                    value="{{ model.explanation or '[]' }}"
-                />
-                <!-- <textarea 
-                    name="explanation"
-                    id="model-explanation-textarea" 
-                    class="hidden"
-                >{{ model.explanation or "[]" }}</textarea> -->
+                <div id="model-explanation-container">
+                    <div id="model-explanation-editor" class="min-h-[300px]"></div>
+                    <input name="explanation" id="model-explanation" class="hidden"
+                        value="{{ model.explanation or '[]' }}"
+                    />
+                </div>
             </div>
             <div class="flex flex-row justify-center items-center gap-3 mb-2">
                 <button 
@@ -183,6 +180,13 @@
             },
             theme: "snow"
         });
+
+        quill.keyboard.addBinding({
+            key: "f",
+            shortKey: true
+        }, (range, context) => {
+            document.getElementById("model-explanation-container").getElementsByClassName("ql-formula")[0].click()
+        })
 
         const quillPreview = new Quill("#explanation-preview", {
             modules: {
