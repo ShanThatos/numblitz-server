@@ -14,7 +14,11 @@ from src.utils.mathgen import generate_multiple
 
 @app.get("/admin/listmodels", dependencies=[Depends(verify_admin)])
 def admin_listmodels():
-    return HTMLResponse(render_template("admin/listmodels.html", models=ProblemModel.all()))
+    return HTMLResponse(
+        render_template(
+            "admin/listmodels.html", models=ProblemModel.all(), categories=ProblemCategory.all()
+        )
+    )
 
 
 @app.get("/admin/createmodel", dependencies=[Depends(verify_admin)])

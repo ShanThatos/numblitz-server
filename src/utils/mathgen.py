@@ -1,4 +1,5 @@
 import random
+import re
 from collections import Counter
 from typing import List, Optional
 
@@ -21,12 +22,10 @@ def generate_multiple(
     if model is None:
         model = ProblemModel.get(model_id).get_mathgen_model()  # type: ignore
 
-    group_prefix = "@group "
-
-    if not model.code.startswith(group_prefix):
+    if not re.match(r"^@group(\s.*)?$", model.code, re.M | re.DOTALL):
         return MathProblemGenerator(model, seed=seed).generate_multiple(count)
 
-    model_ids = model.code[len(group_prefix) :].strip().split()
+    model_ids = model.code.strip().split()[1:]
     rng = random.Random(seed)
     chosen_model_ids = rng.choices(model_ids, k=count)
     counts = Counter(chosen_model_ids)
