@@ -8,20 +8,22 @@ from src.database.models import ModelProgress, ProblemModel
 from src.utils.auth.depend import AuthUser, any_user
 
 
-@app.get("/mathgen/modelprogress/{model_id}")
-def mathgen_modelprogress(auser: Annotated[AuthUser, Depends(any_user)], model_id: str):
+@app.get("/mathgen/modelprogress")
+def mathgen_modelprogress(auser: Annotated[AuthUser, Depends(any_user)], model_ids: str):
     if auser.is_guest:
-        return {"progress": 0}
+        return {}
 
-    model = ProblemModel.get(model_id)
-    if not model.allow_access(auser.subscribed):
-        return {"progress": 0}
+    model_ids = model_ids.strip()
+    if not model_ids:
+        return {}
 
-    mp: ModelProgress = db.s.first_or_create(
-        ModelProgress, user_id=auser.user.id, model_id=model_id
+    progress = {}
+    mps = ModelProgress.all(
+        ModelProgress.user_id == auser.user.id, ModelProgress.model_id.in_(model_ids.split(","))
     )
+    progress = {mp.model_id: mp.progress for mp in mps}
 
-    return {"progress": mp.progress}
+    return progress
 
 
 @app.post("/mathgen/modelprogress/{model_id}")
