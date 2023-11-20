@@ -1,0 +1,76 @@
+{% extends "admin/layout.html" %}
+
+{% block head %}
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+{% endblock %}
+
+{% block title %}Admin Order Models{% endblock %}
+
+{% block content %}
+<div class="w-[100vw] min-h-[100vh] flex flex-col justify-center items-center">
+    <div class="m-5 p-5 shadow-lg bg-white rounded-lg w-[400px]">
+        <div class="mb-5 flex flex-row gap-2">
+            <button 
+                class="px-3 py-1 bg-blue-200 rounded shadow hover:shadow-md active:opacity-70"
+                onclick="toggleHidden()"
+            >
+                Toggle Hidden
+            </button>
+            <button 
+                class="px-3 py-1 bg-green-300 rounded shadow hover:shadow-md active:opacity-70"
+                onclick="saveOrder()"
+            >
+                Save Order
+            </button>
+        </div>
+        <div id="modellist" class="flex flex-col gap-1">
+            {% for model in models %}
+                <div 
+                    modelid="{{ model.id }}"
+                    class="px-3 py-1.5 bg-neutral-50 border-2 border-neutral-200 rounded cursor-pointer
+                        {{ 'modelhidden' if model.hidden else '' }}
+                    "
+                >
+                    <div>
+                        <h3>
+                            {% if model.hidden %}
+                                <span class="px-2 bg-neutral-200 rounded">H</span>
+                            {% endif %}
+                            {{ model.name }}
+                        </h3>
+                    </div>
+                    <img class="max-h-6" src="{{ model.image_display }}" alt="" />
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<script>
+    function toggleHidden() {
+        var hiddenModels = document.getElementsByClassName("modelhidden")
+        for (var i = 0; i < hiddenModels.length; i++)
+            hiddenModels[i].classList.toggle("hidden")
+    }
+    function saveOrder() {
+        var modelList = document.getElementById("modellist")
+        var order = []
+        for (child of modelList.children)
+            order.push(child.getAttribute("modelid"))
+        fetch("/admin/ordermodels", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(order)
+        })
+    }
+    window.onload = () => {
+        new Sortable(document.getElementById("modellist"), {
+            multiDrag: true,
+            selectedClass: "border-blue-500",
+            fallbackTolerance: 3,
+            animation: 150
+        })
+    }
+</script>
+{% endblock %}

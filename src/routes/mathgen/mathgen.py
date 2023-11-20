@@ -31,7 +31,7 @@ def mathgen_models(
     if model_ids is not None:
         expressions.append(ProblemModel.id.in_(model_ids.split(",")))
 
-    models = ProblemModel.all(*expressions)
+    models = ProblemModel.all(*expressions, order_by=(ProblemModel.category_id, ProblemModel.order))
     return [model.get_public_data(auser.subscribed) for model in models]
 
 

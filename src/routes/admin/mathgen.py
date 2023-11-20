@@ -1,9 +1,9 @@
-import traceback
-from typing import Annotated
+from typing import Annotated, List
 
-from fastapi import Depends, Form, Response
+from fastapi import Body, Depends, Form, Response
 from fastapi.responses import HTMLResponse
 from mathgen import MathProblemModel
+from sqlalchemy import update
 
 from src.base.fastapi_instance import app
 from src.database import ProblemCategory, ProblemModel, db
@@ -14,11 +14,30 @@ from src.utils.mathgen import generate_multiple
 
 @app.get("/admin/listmodels", dependencies=[Depends(verify_admin)])
 def admin_listmodels():
+    models = ProblemModel.all(order_by=(ProblemModel.category_id, ProblemModel.order))
+    return HTMLResponse(
+        render_template("admin/listmodels.html", models=models, categories=ProblemCategory.all())
+    )
+
+
+@app.get("/admin/ordermodels/{category_id}", dependencies=[Depends(verify_admin)])
+def admin_ordermodels(category_id: str):
+    models = ProblemModel.all(ProblemModel.category_id == category_id, order_by=ProblemModel.order)
     return HTMLResponse(
         render_template(
-            "admin/listmodels.html", models=ProblemModel.all(), categories=ProblemCategory.all()
+            "admin/order.html",
+            models=models,
+            categories=ProblemCategory.all(),
         )
     )
+
+
+@app.post("/admin/ordermodels", dependencies=[Depends(verify_admin)])
+def admin_ordermodels_post(order: Annotated[List[str], Body()]):
+    update_params = [{"id": mid, "order": i} for i, mid in enumerate(order)]
+    db.s.execute(update(ProblemModel), update_params)
+    db.s.commit()
+    return {}
 
 
 @app.get("/admin/createmodel", dependencies=[Depends(verify_admin)])

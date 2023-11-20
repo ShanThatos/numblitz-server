@@ -49,6 +49,8 @@
 
     </script>
 
+    {% block head %}{% endblock %}
+
     <title>
         {% block title %}{% endblock %}
     </title>
@@ -57,10 +59,22 @@
     {% block menu %}
         <div class="absolute left-5 top-5 bg-white shadow-lg rounded-lg text-blue-700 text-center">
             {% for href, text in [("/admin", "Home"), ("/admin/createmodel", "New"), ("/admin/listmodels", "All")] %}
-                <a href="{{ href }}" class="p-3 block border-y border-neutral-200 hover:bg-neutral-100 hover:opacity-50 active:opacity-30">
+                <a href="{{ href }}" class="p-3 block border-y border-neutral-200 hover:bg-neutral-100 active:opacity-30">
                     <h3>{{ text }}</h3>
                 </a>
             {% endfor %}
+            <div class="group relative block border-y border-neutral-200 hover:bg-neutral-100 cursor-pointer">
+                <div class="p-3">
+                    <h3>Order</h3>
+                </div>
+                <div class="absolute hidden group-hover:block bg-white shadow-lg rounded-lg left-full top-0">
+                    {% for category in categories %}
+                        <a href="/admin/ordermodels/{{ category.id }}" class="block p-3 border-y border-neutral-200 hover:bg-neutral-100 active:opacity-30">
+                            <h3>{{ category.name }}</h3>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
         <!-- <a href="/admin" class="absolute left-5 top-5 bg-white p-3 shadow-lg rounded-lg hover:opacity-70 active:opacity-50">
             <h3 class="text-blue-700">Home</h3>

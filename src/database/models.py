@@ -70,8 +70,19 @@ class ModelExtensions:
         return db.s.get(cls, id)
 
     @classmethod
-    def all[T](cls: Type[T], *expressions: ColumnExpressionArgument[bool]) -> Sequence[T]:
-        return db.s.execute(select(cls).where(*expressions)).scalars().all()
+    def all[
+        T
+    ](
+        cls: Type[T],
+        *expressions: ColumnExpressionArgument[bool],
+        order_by: Optional[ColumnExpressionArgument | Iterable[ColumnExpressionArgument]] = None,
+    ) -> Sequence[T]:
+        stmt = select(cls).where(*expressions)
+        if order_by is not None:
+            if not isinstance(order_by, Iterable):
+                order_by = (order_by,)
+            stmt = stmt.order_by(*order_by)
+        return db.s.execute(stmt).scalars().all()
 
     @classmethod
     def all_as_dict(cls, *expressions: ColumnExpressionArgument[bool]) -> List[Dict]:
@@ -130,6 +141,7 @@ class ProblemModel(db.Model, ModelExtensions):
     rtl: Mapped[bool] = mapped_column(server_default="false")
     units: Mapped[str] = mapped_column(server_default="")
     hidden: Mapped[bool] = mapped_column(server_default="false")
+    order: Mapped[int] = mapped_column(server_default="0")
 
     category: Mapped["ProblemCategory"] = relationship(back_populates="models")
 
