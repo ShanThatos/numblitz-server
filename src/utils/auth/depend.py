@@ -19,7 +19,7 @@ class AuthUser:
         if self.token is None:
             raise Exception("User is not authenticated")
         if self.__user is None:
-            self.__user = db.s.first(User, id=self.token.user_id)
+            self.__user = User.get(self.token.user_id)
         return self.__user
 
     @property

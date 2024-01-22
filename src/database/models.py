@@ -111,7 +111,6 @@ class User(db.Model, ModelExtensions):
     user_id: Mapped[str]
     provider: Mapped[str]
     subscribed: Mapped[bool] = mapped_column(server_default="false")
-    admin: Mapped[bool] = mapped_column(server_default="false")
 
     __table_args__ = (UniqueConstraint("user_id", "provider", name="unique_user_constraint"),)
 

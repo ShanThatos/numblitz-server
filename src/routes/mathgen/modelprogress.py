@@ -17,13 +17,14 @@ def mathgen_modelprogress(auser: Annotated[AuthUser, Depends(any_user)], model_i
     if not model_ids:
         return {}
 
-    model_ids_set = set(model_ids.split(","))
-    progress = {mi: 0 for mi in model_ids_set}
     mps = ModelProgress.all(
-        ModelProgress.user_id == auser.user.id, ModelProgress.model_id.in_(model_ids_set)
+        ModelProgress.user_id == auser.user.id,
+        ModelProgress.model_id.in_(model_ids.split(",")),
     )
+
+    progress = {}
     for mp in mps:
-        progress[mp.model_id] = mp.progress
+        progress[mp.model_id] = {"progress": mp.progress, "average": mp.average_time}
 
     return progress
 
