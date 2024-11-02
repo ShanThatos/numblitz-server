@@ -1,0 +1,7 @@
+/.vscode/
+/.venv/
+/temp/
+__pycache__/
+/.env
+/tailwind.config.js
+

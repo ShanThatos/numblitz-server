@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block title %}Categories{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+{% endblock %}
+
+{% set cell_class = "border border-slate-600 px-3 py-1" %}
+{% set button_class = "px-3 py-1 cursor-pointer text-white rounded hover:opacity-80 active:opacity-70" %}
+{% block content %}
+<div class="flex flex-col justify-start items-center">
+    <div class="p-6 bg-slate-100 shadow rounded-lg flex flex-col gap-3">
+        <h1 class="font-bold text-2xl text-center">{{ category.display_name }} Model Order</h1>
+        <button class="bg-blue-500 text-white px-3 py-1 rounded hover:opacity-80 active:opacity-70" onclick="saveOrder()">Save Order</button>
+        <div id="models" class="flex flex-col gap-2">
+            {% for model in models %}
+                <div modelname="{{ model.name }}"
+                    class="px-3 py-2 bg-neutral-50 border-2 border-neutral-200 rounded cursor-pointer flex flex-col gap-2"
+                >
+                    <h3>{{ model.display_name }}</h3>
+                    <img class="h-10 w-full object-contain" src="{{ model.display_image }}" draggable="false" />
+                </div>
+            {% endfor %}
+        </div>
+        <script>
+            function saveOrder() {
+                let models = document.getElementById("models").children;
+                let order = [];
+                for (let i = 0; i < models.length; i++) {
+                    order.push(models[i].getAttribute("modelname"));
+                }
+                fetch("/admin/categories/{{ category.name }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(order),
+                });
+            }
+            document.addEventListener("DOMContentLoaded", function() {
+                new Sortable(document.getElementById("models"), {
+                    multiDrag: true,
+                    selectedClass: "border-blue-500",
+                    fallbackTolerance: 3,
+                    animation: 150,
+                });
+            });
+        </script>
+    </div>
+</div>
+{% endblock %}

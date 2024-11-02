@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/htmx-ext-json-enc@2.0.1/json-enc.js"></script>
+
+    {% block head %}{% endblock %}
+    <title>{% block title %}{% endblock %}</title>
+</head>
+<body class="bg-stone-300">
+    <div class="min-h-[100vh]">
+        <div class="flex flex-row justify-center items-stretch p-2">
+            {% for (text, href) in [("Home", "/"), ("Categories", "/admin/categories")] %}
+            <a href="{{ href }}" class="w-32 p-2 bg-slate-100 font-bold text-center hover:underline hover:opacity-70 border-collapse border">{{ text }}</a>
+            {% endfor %}
+        </div>
+        <div class="p-10">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    <style>
+        html {
+            overflow-x: hidden;
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\(', right: '\\)', display: false},
+                    {left: '\\[', right: '\\]', display: true}
+                ],
+                throwOnError : false
+            });
+        });
+    </script>
+</head>
+<body class="w-full h-[100vh] ">
+    <div id="template" hidden>
+        <div class="border-2 border-black">
+            <div class="text-[2.5em] flex justify-center items-center" onclick="copyasimg(this)">
+                __MATH__
+            </div>
+        </div>
+    </div>
+    <div class="w-full h-full flex flex-col justify-center items-center">
+        <div id="displays" class="flex flex-row max-w-[600px] flex-wrap justify-center items-center mx-auto gap-5"></div>
+    </div>
+    
+
+    <script>
+        var template = document.getElementById("template").innerHTML
+        var displays = document.getElementById("displays")
+        var equations = ["$13^2$", "$\\frac{7}{8} + \\frac{8}{7}$", "$25 \\times 36$", "$38^2 - 32^2$", "$23_4 = 1011_2$", "$1 + 2 + \\dots + n$", "$\\text{GCD}, \\sqrt{x}, \\dots$", "$\\pi^n$", "${n \\choose r}$"]
+
+        equations.forEach((eq) => {
+            displays.innerHTML += template.replace("__MATH__", eq)
+        })
+
+        function copyasimg(el) {
+            domtoimage.toPng(el)
+                .then(function (dataUrl) {
+                    navigator.clipboard.writeText(dataUrl)
+                    console.log("COPIED: ", dataUrl)
+                })
+                .catch(function (error) {
+                    console.error('oops, something went wrong!', error)
+                })
+        }
+
+    </script>
+</body>
+</html>

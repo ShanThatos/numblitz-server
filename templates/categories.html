@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block title %}Categories{% endblock %}
+
+
+{% set cell_class = "border border-slate-600 px-3 py-1" %}
+{% set button_class = "px-3 py-1 cursor-pointer text-white rounded hover:opacity-80 active:opacity-70" %}
+{% block content %}
+<div class="flex flex-col justify-start items-center">
+    <div class="p-6 bg-slate-100 shadow rounded-lg">
+        <table class="border-collapse">
+            <thead>
+                <tr>
+                    <th class="{{ cell_class }}">ID</th>
+                    <th class="{{ cell_class }}">Name</th>
+                    <th class="{{ cell_class }}">Options</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr name="{{ category.name }}">
+                    <td class="{{ cell_class }}">{{ category.name }}</td>
+                    <td class="{{ cell_class }}">{{ category.display_name }}</td>
+                    <td class="{{ cell_class }}">
+                        <div class="flex flex-row flex-wrap justify-center items-center gap-2">
+                            <a class="{{ button_class }} bg-blue-500" href="/admin/categories/{{ category.name }}">
+                                Edit
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

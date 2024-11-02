@@ -1,0 +1,18 @@
+{% macro render_problem_preview(problem) %}
+<div class="border-2 border-neutral-400 rounded p-2 flex flex-row justify-between gap-5">
+    <div>
+        {{ problem.question }}
+        {% if problem.format == "multiplechoice" %}
+        <div class="mt-1">
+            {% for choice in problem.choices %}
+            <div>
+                {{ "ABCDEFG"[loop.index0] }}. 
+                {{ choice }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    <div>{{ problem.answer }} {{ problem.units }}</div>
+</div>
+{% endmacro %}

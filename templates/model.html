@@ -1,0 +1,354 @@
+{% extends "layout.html" %}
+
+{% block head %}
+<!-- dom-to-image -->
+<!-- <script src="/static/domtoimage/dom-to-image-more.min.js"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
+
+<!-- KaTeX -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous"></script>
+
+<!-- QuillJS -->
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+<script src="https://unpkg.com/quill-table-ui@1.0.5/dist/umd/index.js" type="text/javascript"></script>
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+<link href="https://unpkg.com/quill-table-ui@1.0.5/dist/index.css" rel="stylesheet">
+
+<script>
+    var katexRenderOptions = {
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        throwOnError : false
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement(document.body, katexRenderOptions);
+    });
+
+    htmx.on("htmx:afterSwap", function(event) {
+        renderMathInElement(event.target, katexRenderOptions);
+    })
+
+    Quill.register({
+        'modules/tableUI': quillTableUI.default
+    }, true)
+
+</script>
+
+<!-- Monaco -->
+<script src="/static/monaco/min/vs/loader.js"></script>
+{% endblock %}
+
+{% block title %}Model {{ model.display_name }}{% endblock %}
+
+{% set input_class = "p-1 mt-1 w-full rounded border-2 border-slate-300" %}
+{% set bottom_button_class = "w-32 py-1.5 cursor-pointer text-white rounded hover:opacity-80 active:opacity-70" %}
+{% block content %}
+<div class="flex flex-col justify-start items-center">
+    <form class="max-w-full flex flex-col gap-10 p-5 bg-slate-100 rounded-lg shadow" hx-post="/admin/models/{{ model.name }}" hx-ext="json-enc" hx-swap="none">
+        {% if model.display_name %}
+            <h1 class="text-xl font-bold text-center">{{ model.display_name }}</h1>
+        {% endif %}
+        <div class="grid grid-cols-2 gap-10 w-[1500px] max-w-full">
+            <div class="flex flex-col items-stretch gap-3">
+                <div>
+                    <label>Display Name</label>
+                    <input type="text" class="{{ input_class }}" name="display_name" value="{{ model.display_name }}" />
+                </div>
+                <div class="grid grid-cols-2 gap-x-3">
+                    <label>ID</label>
+                    <label>Category</label>
+                    <input type="text" class="{{ input_class }}" name="name" value="{{ model.name }}">
+                    <select name="category_name" class="{{ input_class }}">
+                        {% for category in categories %}
+                        <option value="{{ category.name }}" {% if category.name == model.category_name %}selected{% endif %}>{{ category.display_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="grid grid-cols-3 gap-x-3">
+                    <label>Difficulty</label>
+                    <label>Format</label>
+                    <label>Units</label>
+                    <select name="difficulty" class="{{ input_class }}">
+                        {% for option in range(1, 4) %}
+                        <option value="{{ option }}" {% if option == model.difficulty %}selected{% endif %}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="format" class="{{ input_class }}">
+                        {% for option in ("auto", "number", "decimal", "money", "fraction", "mixed", "multiplechoice") %}
+                        <option value="{{ option }}" {% if option == model.format %}selected{% endif %}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="text" class="{{ input_class }}" name="units" value="{{ model.units }}" />
+                </div>
+                <div class="grid grid-cols-2 gap-x-5 px-1">
+                    <div class="flex flex-row justify-start items-center gap-1.5">
+                        <input class="w-5 h-5" type="checkbox" name="rtl" {% if model.rtl %}checked{% endif %} />
+                        <label>Right-to-Left</label>
+                    </div>
+                    <div class="flex flex-row justify-start items-center gap-1.5">
+                        <input class="w-5 h-5" type="checkbox" name="hidden" {% if model.hidden %}checked{% endif %} />
+                        <label>Hidden</label>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-x-3">
+                    <label>Image Equation</label>
+                    <label>base64</label>
+                    <input type="text" class="{{ input_class }}" name="display_image_equation" value="{{ model.display_image_equation }}" style="font-family: Consolas;">
+                    <input type="text" class="{{ input_class }}" name="display_image" value="{{ model.display_image }}" readonly>
+                </div>
+                <script>
+                    var previewId = 0;
+                    var equationEl = document.querySelector("input[name='display_image_equation']");
+                    function triggerRender() {
+                        var currentId = ++previewId;
+                        var previewEl = document.getElementById("displaypreview");
+                        previewEl.innerHTML = `$ ${equationEl.value}$`;
+                        renderMathInElement(previewEl, katexRenderOptions);
+                        setTimeout(function() {
+                            if (currentId !== previewId) return;
+                            domtoimage.toPng(previewEl, { bgcolor: "transparent" }).then(function(dataUrl) {
+                                if (currentId !== previewId) return;
+                                document.querySelector("input[name='display_image']").value = dataUrl;
+                                document.getElementById("displaypreviewimg").src = dataUrl;
+                            });
+                        }, 100);
+                    }
+                    equationEl.addEventListener("input", triggerRender);
+                    document.addEventListener("DOMContentLoaded", triggerRender);
+                </script>
+                <div>
+                    <label>Image Preview</label>
+                    <div class="overflow-x-auto">
+                        <div class="min-w-[600px]">
+                            <div class="p-1 flex flex-col justify-start items-start gap-3">
+                                <div class="border border-black text-[3em]">
+                                    <div id="displaypreview" class="flex justify-center items-center p-0.5 bg-transparent"></div>
+                                </div>
+                                <img id="displaypreviewimg" class="border border-black bg-white" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="flex flex-col gap-5">
+                    <div>
+                        <label>Model Code Cheatsheet</label>
+                        <div class="flex flex-col flex-wrap w-fit max-h-[180px] gap-x-10 border border-slate-300 rounded px-3 py-2 leading-tight bg-white overflow-x-auto">
+                            <pre>@var</pre>
+                            <pre>@condition</pre>
+                            <pre>@[text]question</pre>
+                            <pre>@choices</pre>
+                            <pre>@numchoices</pre>
+                            <pre>@order</pre>
+                            <pre>@answer</pre>
+                            <pre>@key</pre>
+                            <pre>rand(,,)</pre>
+                            <pre>range(,,)</pre>
+                            <pre>sum([],)</pre>
+                            <pre>choice([])</pre>
+                            <pre>gcd(...)</pre>
+                            <pre>lcm(...)</pre>
+                            <pre>a2r(n)</pre>
+                            <pre>is_integer(...)</pre>
+                            <pre>is_fraction(...)</pre>
+                            <pre>is_proper(...)</pre>
+                            <pre>is_improper(...)</pre>
+                            <pre>is_repeating(...)</pre>
+                        </div>
+                    </div>
+                    <div class="max-w-full">
+                        <label>Model Code</label>
+                        <div id="codeeditor" class="max-w-full overflow-hidden" style="height: 300px; border: 1px solid grey;"></div>
+                        <input type="hidden" name="code" hx-post="/admin/models/{{ model.name }}/preview" hx-trigger="load, change" hx-target="#preview" hx-swap="innerHTML" />
+                        <div id="previewerror" class="text-red-700 h-12 max-h-12 overflow-y-auto break-all" style="font-family: Consolas;">
+                        </div>
+                        <script>
+                            var modelcode = {{ model.code|tojson }};
+                        </script>
+                        <script>
+                            var codeInput = document.querySelector("input[name='code']");
+                            codeInput.value = modelcode;
+                            require.config({ paths: { 'vs': '/static/monaco/min/vs' } });
+        
+                            require(["vs/editor/editor.main"], function () {
+                                monaco.languages.register({ id: "mathgen" });
+                                monaco.languages.setMonarchTokensProvider("mathgen", {
+                                    tokenizer: {
+                                        root: [
+                                            [/[@]group/, "group"],
+                                            [/[@]var/, "var"],
+                                            [/[@]condition/, "condition"],
+                                            [/[@]question/, "qca"],
+                                            [/[@]textquestion/, "qca"],
+                                            [/[@]choices/, "qca"],
+                                            [/[@]order/, "qca"],
+                                            [/[@]numchoices/, "qca"],
+                                            [/[@]answer/, "qca"],
+                                            [/[@]key/, "key"],
+                                        ],
+                                    },
+                                });
+                                monaco.editor.defineTheme("mathgenTheme", {
+                                    base: "vs",
+                                    inherit: false,
+                                    rules: [
+                                        { token: "group", foreground: "0000bb", fontStyle: "bold" },
+                                        { token: "var", foreground: "0000bb", fontStyle: "bold" },
+                                        { token: "condition", foreground: "008800", fontStyle: "bold" },
+                                        { token: "qca", foreground: "b03f3f", fontStyle: "bold" },
+                                        { token: "key", foreground: "0b969c", fontStyle: "bold" },
+                                    ],
+                                    colors: {
+                                        "editor.foreground": "#000000",
+                                    },
+                                });
+        
+        
+                                var editor = monaco.editor.create(document.getElementById("codeeditor"), {
+                                    theme: "mathgenTheme",
+                                    language: "mathgen",
+                                    value: modelcode,
+                                    lineNumbersMinChars: 3,
+                                    folding: false,
+                                    wordWrap: "on",
+                                    wrappingIndent: "indent",
+                                });
+                                editor.onDidChangeModelContent(function (e) {
+                                    codeInput.value = editor.getValue();
+                                    htmx.trigger(codeInput, "change");
+                                    document.getElementById("previewerror").innerHTML = "";
+                                });
+                            });
+                        </script>
+                    </div>
+                </div>
+            </div>
+            <div class="col-span-2">
+                <div id="preview" class="flex flex-col flex-wrap max-h-[200px] p-2 gap-3 overflow-x-auto" style="font-family: KaTeX_Main;"></div>
+                <style>
+                    #preview .katex {
+                        font-size: 1em;
+                    }
+                </style>
+            </div>
+            <div class="flex flex-col explanation-container">
+                <input type="hidden" name="explanation">
+                <div id="explanation-editor" class="bg-white"></div>
+            </div>
+            <div class="flex flex-col explanation-container">
+                <div id="explanation-preview" class="bg-white"></div>
+            </div>
+            <style>
+                .ql-container .katex {
+                    font-size: 1em;
+                }
+                .ql-container {
+                    min-height: 200px;
+                    max-height: 80vh;
+                    font-size: 1.1em;
+                    font-family: KaTeX_Main, "Times New Roman", serif;
+                }
+                .ql-editor {
+                    overflow-y: auto;
+                }
+            </style>
+            <script>
+                var modelexplanation = {{ (model.explanation or "\"[]\"")|tojson }};
+            </script>
+            <script>
+                var explanationEl = document.querySelector("input[name='explanation']");
+
+                const Delta = Quill.import('delta');
+                const Embed = Quill.import('blots/embed');
+
+                class SoftLineBreakBlot extends Embed {
+                    static blotName = 'softbreak';
+                    static tagName = 'br';  
+                    static className = 'softbreak';
+                }
+                Quill.register(SoftLineBreakBlot);
+
+                const quillEditor = new Quill("#explanation-editor", {
+                    modules: {
+                        toolbar: [
+                            [{ "size": ["small", false, "large", "huge"] }],
+                            ["bold", "italic", "underline", "strike"],
+                            [{ "color": [] }, { "background": [] }],
+                            ["table"],
+                            [{ "list": "ordered" }, { "list": "bullet" }, { "indent": "-1" }, { "indent": "+1" }],
+                            [{ "align": [] }],
+                            ["link", "image", "video", "formula"]
+                        ],
+                        table: true,
+                        tableUI: true,
+                        keyboard: {
+                            bindings: {
+                                custom: {
+                                    key: 'Enter',
+                                    shiftKey: true,
+                                    handler: function (range, context) {
+                                        const currentLeaf = quillEditor.getLeaf(range.index)[0];
+                                        const nextLeaf = quillEditor.getLeaf(range.index + 1)[0];    
+                                        quillEditor.insertEmbed(range.index, "softbreak", true, Quill.sources.USER);    
+                                        if (nextLeaf === null || currentLeaf.parent !== nextLeaf.parent) {
+                                            quillEditor.insertEmbed(range.index, "softbreak", true, Quill.sources.USER);
+                                        }
+                                        quillEditor.setSelection(range.index + 1, Quill.sources.SILENT);    
+                                    }
+                                }
+                            }
+                        },
+                        clipboard: {
+                            matchers: [
+                                [ "BR", function(node, delta) {
+                                    let newDelta = new Delta();
+                                    newDelta.insert({softbreak: true});
+                                    return newDelta;
+                                } ]
+                            ],
+                        }
+                    },
+                    theme: "snow"
+                });
+
+                quillEditor.keyboard.addBinding({
+                    key: "f",
+                    shortKey: true
+                }, (range, context) => {
+                    document.getElementById("explanation-editor").parentElement.getElementsByClassName("ql-formula")[0].click()
+                });
+
+                const quillPreview = new Quill("#explanation-preview", {
+                    modules: {
+                        toolbar: false
+                    },
+                    readOnly: true,
+                    theme: "snow"
+                });
+
+                explanationEl.value = modelexplanation;
+                quillEditor.setContents(JSON.parse(modelexplanation));
+                quillPreview.setContents(quillEditor.getContents());
+
+                quillEditor.on("text-change", function(delta, oldDelta, source) {
+                    explanationEl.value = JSON.stringify(quillEditor.getContents());
+                    quillPreview.setContents(quillEditor.getContents());
+                });
+
+            </script>
+        </div>
+        <div class="flex flex-row justify-center items-center gap-5">
+            <button class="{{ bottom_button_class }} bg-blue-500" type="submit">Save</button>
+            <!-- <button class="{{ bottom_button_class }} bg-red-500" hx-post="/model/{{ model.id }}/delete">Delete</button> -->
+        </div>
+    </form>
+</div>
+{% endblock %}
