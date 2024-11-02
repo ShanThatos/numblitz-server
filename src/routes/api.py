@@ -10,6 +10,10 @@ from utils.mathgen import collect_models
 
 router = APIRouter(prefix="/api")
 
+@router.get("/")
+def index():
+    return {"message": "lol hi what are you doing here?"}
+
 @router.get("/generate/model/{model_name}")
 def generate(model_name: str, amount: int = 10, seed: Optional[int] = None):
     print(f"Generating {amount} problems for {model_name}")
