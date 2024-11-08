@@ -334,13 +334,25 @@
                     theme: "snow"
                 });
 
+                function fixImages() {
+                    document.querySelectorAll(".ql-container img").forEach((el) => {
+                        if (!el.getAttribute("fixed")) {
+                            el.setAttribute("srcset", `${el.getAttribute("src")} 5x`);
+                            el.setAttribute("fixed", true);
+                        }
+                    });
+                }
+
                 explanationEl.value = modelexplanation;
                 quillEditor.setContents(JSON.parse(modelexplanation));
                 quillPreview.setContents(quillEditor.getContents());
+                fixImages();
 
                 quillEditor.on("text-change", function(delta, oldDelta, source) {
                     explanationEl.value = JSON.stringify(quillEditor.getContents());
                     quillPreview.setContents(quillEditor.getContents());
+
+                    fixImages();
                 });
 
             </script>

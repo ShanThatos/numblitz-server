@@ -3,7 +3,11 @@ import subprocess
 import sys
 
 if __name__ == "__main__":
-    if "categories" in sys.argv:
+    if "tex2image" in sys.argv:
+        args = sys.argv.copy()[1:]
+        args.remove("tex2image")
+        subprocess.run(f"python -m src.scripts.tex2image {" ".join(args)}", shell=True)
+    elif "categories" in sys.argv:
         subprocess.run("cd src && python -m scripts.upsert_categories", shell=True)
     else:
         import uvicorn
