@@ -52,9 +52,13 @@
 {% block content %}
 <div class="flex flex-col justify-start items-center">
     <form class="max-w-full flex flex-col gap-10 p-5 bg-slate-100 rounded-lg shadow" hx-post="/admin/models/{{ model.name }}" hx-ext="json-enc" hx-swap="none">
-        {% if model.display_name %}
-            <h1 class="text-xl font-bold text-center">{{ model.display_name }}</h1>
-        {% endif %}
+        <div>
+            {% if model.display_name %}
+                {% for line in model.display_name.split("\\n") %}
+                    <h1 class="text-xl font-bold text-center">{{ line }}</h1>
+                {% endfor %}
+            {% endif %}
+        </div>
         <div class="grid grid-cols-2 gap-10 w-[1500px] max-w-full">
             <div class="flex flex-col items-stretch gap-3">
                 <div>
@@ -141,7 +145,7 @@
                 <div class="flex flex-col gap-5">
                     <div>
                         <label>Model Code Cheatsheet</label>
-                        <div class="flex flex-col flex-wrap w-fit max-h-[180px] gap-x-10 border border-slate-300 rounded px-3 py-2 leading-tight bg-white overflow-x-auto">
+                        <div class="flex flex-col flex-wrap w-fit max-h-[160px] gap-x-10 border border-slate-300 rounded px-3 py-2 leading-tight bg-white overflow-x-auto">
                             <pre>@var</pre>
                             <pre>@condition</pre>
                             <pre>@[text]question</pre>
@@ -150,6 +154,7 @@
                             <pre>@order</pre>
                             <pre>@answer</pre>
                             <pre>@key</pre>
+                            <pre>@units</pre>
                             <pre>rand(,,)</pre>
                             <pre>range(,,)</pre>
                             <pre>sum([],)</pre>
@@ -193,6 +198,7 @@
                                             [/[@]numchoices/, "qca"],
                                             [/[@]answer/, "qca"],
                                             [/[@]key/, "key"],
+                                            [/[@]units/, "qca"],
                                         ],
                                     },
                                 });

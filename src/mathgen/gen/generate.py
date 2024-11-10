@@ -148,6 +148,11 @@ class MathProblemGenerator:
         if not isinstance(self.problem.key[0], str):
             raise ValueError("Key index 0 must be a string")
 
+    def _gen_units(self, line: str):
+        if "'" in line:
+            raise ValueError("Single quotes are not allowed in units")
+        self.problem.units = evaluate_expression(f"f{repr(line.strip())}", {**QA_GLOBALS, **self.vars}, seed=self.__current_seed)
+
     def _gen_group(self, line: str):
         raise Exception("Group directive not handled by mathgen core")
 

@@ -44,11 +44,13 @@ def model(name: str):
     model = model.data
     # with open("./temp.json", "w") as f:
     #     json.dump(json.loads(model["explanation"]), f, indent=2)
+    model["display_name"] = model.get("display_name", "").replace("\n", "\\n")
     categories = supabase.table("mathgen_categories").select("*").execute().data
     return HTMLResponse(render_template("model.html", model=model, categories=categories))
 
 @router.post("/models/{name}")
 async def model_update(name: str, model: MathgenModelData):
+    model.display_name = model.display_name.replace("\\n", "\n")
     supabase.table("mathgen_models").update(model.model_dump()).eq("name", name).execute()
     return HTMLResponse("", headers={"HX-Redirect": f"{router.prefix}/models/{model.name}"})
 

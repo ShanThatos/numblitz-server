@@ -73,3 +73,42 @@ def _a2r(arabic_number: PN):
     
     return "".join(result)
 
+@use_as_global("convert_base")
+def _convert_base(num: PN | str, *args: PN):
+    if len(args) == 0:
+        raise ValueError("convert_base: missing 'to' target base")
+    if len(args) > 2:
+        raise ValueError("convert_base: too many arguments")
+    
+    if any(not x.is_integer for x in (num, *args)):
+        raise ValueError("convert_base: expected integer arguments")
+    
+    is_neg = False
+    if isinstance(num, str) and num[0] == "-":
+        is_neg = True
+        num = num[1:]
+    elif num < 0:
+        is_neg = True
+        num = -num
+
+    from_base = PN(10)
+    to_base = args[-1]
+    if len(args) == 2:
+        from_base = args[0]
+    
+    if from_base != 10 and not isinstance(num, str):
+        raise ValueError("convert_base: expected string input for non-decimal base")
+    
+    num = str(num)
+    num_10 = int(num, from_base.num)
+
+    digits = []
+    while num_10:
+        num_10, digit = divmod(num_10, to_base.num)
+        digits.append(str(digit))
+    
+    ret = "".join(reversed(digits))
+    if ret == "":
+        return "0"
+    return is_neg * "-" + ret
+
