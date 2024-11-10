@@ -7,26 +7,12 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from config import ENVIRONMENT
-from config.clients import supabase
 from routes.api import router as api_router
 from routes.admin import router as admin_router
 
 app = FastAPI(debug=ENVIRONMENT == "dev")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(api_router)
-
-@app.middleware("http")
-async def ping_supabase(request: Request, call_next):
-    for i in range(5):
-        try:
-            supabase.rpc("health").execute()
-            break
-        except Exception as e:
-            if i < 4:
-                print("Supabase health check failed, retrying...")
-            else:
-                raise e
-    return await call_next(request)
 
 if os.name != "nt":
     @app.get("/ip")
