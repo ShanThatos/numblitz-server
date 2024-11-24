@@ -52,11 +52,19 @@
 {% block content %}
 <div class="flex flex-col justify-start items-center">
     <form class="max-w-full flex flex-col gap-10 p-5 bg-slate-100 rounded-lg shadow" hx-post="/admin/models/{{ model.name }}" hx-ext="json-enc" hx-swap="none">
-        <div>
+        <div class="text-center">
             {% if model.display_name %}
                 {% for line in model.display_name.split("\\n") %}
                     <h1 class="text-xl font-bold text-center">{{ line }}</h1>
                 {% endfor %}
+            {% endif %}
+            {% if model.order > 1000 %}
+            <a class="bg-red-500 text-white text-center rounded px-1 h-6 m-2 whitespace-nowrap"
+                target="_blank"
+                href="/admin/categories/{{ model.category_name }}"
+            >
+                FIX ORDER
+            </a>
             {% endif %}
         </div>
         <div class="grid grid-cols-2 gap-10 w-[1500px] max-w-full">

@@ -51,6 +51,14 @@
                             {% if model.code.strip().startswith("@group") %}
                             <span class="bg-purple-800 text-white px-1 h-6 text-center rounded">G</span>
                             {% endif %}
+                            {% if model.order > 1000 %}
+                            <a class="bg-red-500 text-white text-center rounded px-1 h-6 whitespace-nowrap"
+                                target="_blank"
+                                href="/admin/categories/{{ model.category_name }}"
+                            >
+                                FIX ORDER
+                            </a>
+                            {% endif %}
                         </div>
                     </td>
                     <td class="{{ cell_class }}">

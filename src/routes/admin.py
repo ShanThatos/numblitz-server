@@ -71,6 +71,7 @@ def model_duplicate(supabase: SupabaseClientDep, name: str):
         return RedirectResponse(router.prefix)
     model = model.data
     model["name"] = f"{model['name']}_copy_{int(time.time())}"
+    model["hidden"] = True
     del model["id"]
     del model["created_at"]
     del model["order"]

@@ -15,11 +15,15 @@
         <button class="bg-blue-500 text-white px-3 py-1 rounded hover:opacity-80 active:opacity-70" onclick="saveOrder()">Save Order</button>
         <div id="models" class="flex flex-col gap-2">
             {% for model in models %}
-                <div modelname="{{ model.name }}"
-                    class="px-3 py-2 bg-neutral-50 border-2 border-neutral-200 rounded cursor-pointer flex flex-col gap-2"
-                >
-                    <h3>{{ model.display_name }}</h3>
-                    <img class="h-10 w-full object-contain" src="{{ model.display_image }}" draggable="false" />
+                <div modelname="{{ model.name }}" class="px-3 py-2 bg-neutral-50 border-2 border-neutral-200 rounded cursor-pointer flex flex-row">
+                    <div class="flex flex-col gap-2 flex-1">
+                        <h3>{{ model.display_name }}</h3>
+                        <img class="h-10 w-full object-contain" src="{{ model.display_image }}" draggable="false" />
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <button class="mt-auto px-3 py-1 border-neutral-200 border-2 cursor-pointer rounded hover:bg-neutral-100 active:bg-neutral-300" onclick="moveToTop('{{- model.name -}}')">▲</button>
+                        <button class="mt-auto px-3 py-1 border-neutral-200 border-2 cursor-pointer rounded hover:bg-neutral-100 active:bg-neutral-300" onclick="moveToBottom('{{- model.name -}}')">▼</button>
+                    </div>
                 </div>
             {% endfor %}
         </div>
@@ -38,10 +42,18 @@
                     body: JSON.stringify(order),
                 });
             }
+            function moveToTop(name) {
+                let model = document.querySelector(`[modelname="${name}"]`);
+                model.remove();
+                document.getElementById("models").prepend(model);
+            }
+            function moveToBottom(name) {
+                let model = document.querySelector(`[modelname="${name}"]`);
+                model.remove();
+                document.getElementById("models").appendChild(model);
+            }
             document.addEventListener("DOMContentLoaded", function() {
                 new Sortable(document.getElementById("models"), {
-                    multiDrag: true,
-                    selectedClass: "border-blue-500",
                     fallbackTolerance: 3,
                     animation: 150,
                 });
