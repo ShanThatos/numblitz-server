@@ -2,58 +2,59 @@ from fractions import Fraction
 from functools import wraps
 from typing import Literal, Optional
 
-WRAPPED_FUNCS = [
-    "add",
-    "sub",
-    "mul",
-    "truediv",
-    "floordiv",
-    "mod",
-    "divmod",
-    "pow",
-    "pos",
-    "neg",
-    "abs",
-    "int",
-    "ceil",
-    "floor",
-    "round",
-    "trunc",
-    "eq",
-    "ne",
-    "lt",
-    "le",
-    "gt",
-    "ge",
-    "copy",
-    "deepcopy",
-    "bool",
-    "hash",
-]
+
+WRAPPED_FUNCS = {
+    "add": None,
+    "sub": None,
+    "mul": None,
+    "truediv": None,
+    "floordiv": None,
+    "mod": None,
+    "divmod": lambda x: (PN(x[0]), PN(x[1])),
+    "pow": None,
+    "pos": None,
+    "neg": None,
+    "abs": None,
+    "int": int,
+    "ceil": None,
+    "floor": None,
+    "round": None,
+    "trunc": None,
+    "eq": bool,
+    "ne": bool,
+    "lt": bool,
+    "le": bool,
+    "gt": bool,
+    "ge": bool,
+    "copy": None,
+    "deepcopy": None,
+    "bool": bool,
+    "hash": int,
+}
 
 
 def add_fraction_methods(cls):
-    def make_wrapper(func_name):
+    def make_wrapper(func_name, func_return_type):
         @wraps(getattr(Fraction, func_name))
         def func(self, *args, **kwargs):
             args = [arg._frac if isinstance(arg, PN) else arg for arg in args]
             result = getattr(self._frac, func_name)(*args, **kwargs)
-            if isinstance(result, Fraction):
-                return cls(result.numerator, result.denominator)
-            return result
+            if func_return_type is None:
+                return cls(result)
+            return func_return_type(result)
 
         return func
 
-    for func_name in WRAPPED_FUNCS:
+    for func_name, func_return_type in WRAPPED_FUNCS.items():
         func_name = f"__{func_name}__"
-        setattr(cls, func_name, make_wrapper(func_name))
+        setattr(cls, func_name, make_wrapper(func_name, func_return_type))
     return cls
 
 
 # Precise Number
 @add_fraction_methods
 class PN:
-    def __init__(self, num: int = 0, den: int = 1):
+    def __init__(self, num: int | Fraction = 0, den: int = 1):
         self._frac = Fraction(num, den)
 
     @property
